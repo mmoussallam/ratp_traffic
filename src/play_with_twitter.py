@@ -10,6 +10,7 @@ from credentials import oauth_consumer_key, oauth_consumer_secret, oauth_token, 
 from TwitterAPI import TwitterAPI
 api = TwitterAPI(oauth_consumer_key, oauth_consumer_secret, oauth_token, oauth_secret)
 from datetime import datetime
+import json
 
 def make_request(count=200, max_id=None, target_user='@RERA_RATP'):
     dico_param = {'count':count,
@@ -66,7 +67,8 @@ def _parse_date(tweet):
                                        , "%a %b %d %H:%M:%S %Y")
 
 class Event(object):
-        
+    
+    
     def __init__(self, end_tweet):
         self.end_tweet = end_tweet
         self.start_tweet = None
@@ -101,29 +103,45 @@ class Event(object):
         out += "Ends At {} with:\n {}\n\n".format(self.end_tweet['created_at'],
                                        self.end_tweet['text'].encode('utf-8'))
         return out
-    
+
+    def to_obj(self):
+        obj = {"duration":self.get_duration().seconds, "cause":self.get_cause(),
+               "start_date":self.start_tweet['created_at'],
+               "end_date":self.end_tweet['created_at'],
+               "start_tweet": self.start_tweet['text'].encode('utf-8'),
+               "end_tweet": self.end_tweet['text'].encode('utf-8')}
+        return obj
+        
     def __repr__(self):
         return self.get_string()
-        
 
-target_user = '@RERA_RATP'
-r = make_request(target_user=target_user)
-events = []
-current_event = None
-for _ in range(1):
-    for item in r:
-        #print item['created_at']
-        max_id = item['id']
-        date, nature, typ = parse_tweet(item)
-        if typ == 'end':            
-            current_event = Event(item)
-        if typ =='start' and current_event:
-            current_event.close(item)
-            events.append(current_event)
+def get_tweets_for_user(target_user='@RERA_RATP', n_rounds=100):
+    """ get it all """
+    r = make_request(target_user=target_user)
+    events = []
+    current_event = None
+    for _ in range(n_rounds):
+        for item in r:
+            #print item['created_at']
+            max_id = item['id']
+            date, nature, typ = parse_tweet(item)
+            if typ == 'end':            
+                current_event = Event(item)
+            if typ =='start' and current_event:
+                current_event.close(item)
+                events.append(current_event)
+            
+        r = make_request(max_id=max_id, target_user=target_user)
+    return events        
+    
+def save_all(events, outputfile):
+    """ saves to outpufile """
+    with open(outputfile, 'w') as outf:
         
-    r = make_request(max_id=max_id, target_user=target_user)
+        outf.write(json.dumps([t.to_obj() for t in events]))
 
-for event in events:
-    print event.get_string()
-    
-    
+import os.path as op
+outputfile = op.join('C:/Users/Manu/workspace/ratp_traffic/src',
+                     'saved_tweets.json')
+events = get_tweets_for_user(n_round=10)
+save_all(events, outputfile)
