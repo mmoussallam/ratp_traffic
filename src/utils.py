@@ -65,7 +65,4 @@ def get_tweets_for_user(target_user='@RERA_RATP', n_rounds=100):
         r = make_request(max_id=max_id, target_user=target_user)
     return events        
     
-def save_all(events, outputfile):
-    """ saves to outpufile """
-    with open(outputfile, 'w') as outf:
-        outf.write(json.dumps([t.to_obj() for t in events]))
+

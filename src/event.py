@@ -4,6 +4,7 @@ Created on Mon Nov 07 23:27:32 2016
 
 @author: Manu
 """
+import json
 from datetime import datetime
 
 def _parse_date(tweet):
@@ -82,7 +83,7 @@ class EventCollection(object):
         """ saves to outpufile """
         
         with open(outputfile, 'w') as outf:
-            outf.write([t.to_obj() for t in self.eventlist]))
+            outf.write(json.dumps([t.to_obj() for t in self.eventlist]))
         
     def get_statistics(self):
         durations_by_cause = {k:[] for k in causes.values()}
