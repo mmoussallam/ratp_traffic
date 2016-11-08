@@ -11,8 +11,10 @@ from utils import get_tweets_for_user
 import os.path as op
 outputfile = op.join('C:/Users/Manu/workspace/ratp_traffic/src',
                      'saved_tweets.json')
-events = get_tweets_for_user(n_rounds=10)
-events.save(outputfile)
+
+events = get_tweets_for_user(target_user='@RER_A', n_rounds=10)
+#events.save(outputfile)
 
 durations_by_causes = events.get_statistics()
+from pandas import DataFrame
 

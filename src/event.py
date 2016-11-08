@@ -6,17 +6,23 @@ Created on Mon Nov 07 23:27:32 2016
 """
 import json
 from datetime import datetime
+from constants import causes, ESTIMATION
+import re
 
 def _parse_date(tweet):
     return datetime.strptime(tweet['created_at'].replace('+0000 ','')
                                        , "%a %b %d %H:%M:%S %Y")
 
-causes = {"panne de signalisation":"PANNE SIG",
-          "panne de matériel":"PANNE MAT",
-          "panne électrique":"PANNE ELEC",
-          "voyageur sur la voie":"VOYAGEUR_VOIE",
-          "malaise voyageur":"VOYAGEUR_MALAISE",
-          "colis suspect": "COLIS"}
+
+def _parse_estimated_hour(tweet):
+    match = re.search(r'\d{2}:\d{2}', tweet['text'].replace('h',':'))
+    if match:
+        return match.group()
+    match = re.search(r'\d{2}h', tweet['text'])    
+    if match:
+        return match.group()
+    return tweet['text'].split(ESTIMATION)[-1].encode('utf-8')
+    
 
 class Event(object):
     
@@ -24,6 +30,7 @@ class Event(object):
     def __init__(self, end_tweet):
         self.end_tweet = end_tweet
         self.start_tweet = None
+        self.estimation_tweet = None
     
     def is_closed(self):
         return self.start_tweet is not None
@@ -37,7 +44,8 @@ class Event(object):
                 return keyw
         return "UNKNOWN"
         
-    
+    def set_estimation(self, estimation_tweet):
+        self.estimation_tweet = estimation_tweet
     
     def get_duration(self):
         start_time = _parse_date(self.start_tweet)
@@ -51,7 +59,8 @@ class Event(object):
                                              self.get_duration(),
                                              self.start_tweet['created_at'],
                                              self.start_tweet['text'].encode('utf-8'))
-        
+        if self.estimation_tweet is not None:                                         
+            out += "Expected end at {}\n".format(_parse_estimated_hour(self.estimation_tweet))
         out += "Ends At {} with:\n {}\n\n".format(self.end_tweet['created_at'],
                                        self.end_tweet['text'].encode('utf-8'))
         return out
@@ -87,7 +96,10 @@ class EventCollection(object):
         
     def get_statistics(self):
         durations_by_cause = {k:[] for k in causes.values()}
-        
+        durations_by_cause['UNKNOWN'] = []
         for event in self.eventlist:
             durations_by_cause[event.get_cause()].append(event.get_duration()) 
         return durations_by_cause
+    
+    def __repr__(self):
+        return '\n'.join([e.get_string() for e in self.eventlist])
