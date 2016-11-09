@@ -10,7 +10,7 @@ from credentials import oauth_consumer_key, oauth_consumer_secret, oauth_token, 
 from TwitterAPI import TwitterAPI
 api = TwitterAPI(oauth_consumer_key, oauth_consumer_secret, oauth_token, oauth_secret)
 import json
-from event import Event, EventCollection
+from event import Event, EventCollection, _parse_date
 from constants import ESTIMATION
 
 
@@ -61,15 +61,20 @@ def get_tweets_for_user(target_user, n_rounds=100):
     for _ in range(n_rounds):
         for item in r:
             #print item['created_at']
+            # if tweet is not on same day as current, close current and start again
+            if current_event and _parse_date(item).day != _parse_date(current_event.end_tweet).day:
+                current_event = None
+            
             max_id = item['id']
             date, nature, typ = parse_tweet(item)
             if typ == 'end':            
                 current_event = Event(item)
             if typ =='start' and current_event:
+                # add filter on same day otherwise seems absurd
                 current_event.close(item)
                 events.add(current_event)
-            if nature == ESTIMATION:
                 
+            if nature == ESTIMATION and current_event:
                 current_event.set_estimation(item)
                 print current_event
             
