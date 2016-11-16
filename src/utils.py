@@ -57,6 +57,7 @@ def get_tweets_for_user(target_user, n_rounds=100):
     """ get it all """
     r = make_request(target_user=target_user)
     events = EventCollection([])
+    event_stops = set([])
     current_event = None
     for _ in range(n_rounds):
         for item in r:
@@ -67,8 +68,9 @@ def get_tweets_for_user(target_user, n_rounds=100):
             
             max_id = item['id']
             date, nature, typ = parse_tweet(item)
-            if typ == 'end':            
+            if typ == 'end' and item['created_at'] not in event_stops :            
                 current_event = Event(item)
+                event_stops.add(item['created_at'])
             if typ =='start' and current_event:
                 # add filter on same day otherwise seems absurd
                 current_event.close(item)
@@ -76,7 +78,7 @@ def get_tweets_for_user(target_user, n_rounds=100):
                 
             if nature == ESTIMATION and current_event:
                 current_event.set_estimation(item)
-                print current_event
+                #print current_event
             
         r = make_request(max_id=max_id, target_user=target_user)
     return events        

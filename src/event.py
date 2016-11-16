@@ -43,14 +43,19 @@ class Event(object):
             if cause in self.start_tweet['text'].encode('utf-8'):
                 return keyw
         return "UNKNOWN"
-        
+    
+    def get_start_hour(self):
+        return _parse_date(self.start_tweet).hour
+    
     def set_estimation(self, estimation_tweet):
         self.estimation_tweet = estimation_tweet
     
     def get_duration(self):
         start_time = _parse_date(self.start_tweet)
         end_time = _parse_date(self.end_tweet)
-        return end_time - start_time
+        if start_time.day == end_time.day:
+            return end_time - start_time
+        return None
     
     def get_string(self):
         out = ""
@@ -94,12 +99,21 @@ class EventCollection(object):
         with open(outputfile, 'w') as outf:
             outf.write(json.dumps([t.to_obj() for t in self.eventlist]))
         
-    def get_statistics(self):
+    def get_durations_by_cause(self):
         durations_by_cause = {k:[] for k in causes.values()}
         durations_by_cause['UNKNOWN'] = []
         for event in self.eventlist:
-            durations_by_cause[event.get_cause()].append(event.get_duration()) 
+            if event.get_duration():
+                durations_by_cause[event.get_cause()].append(event.get_duration()) 
         return durations_by_cause
+    
+    def get_durations_by_time(self):
+        durations_by_time = {k:[] for k in range(24)}
+        
+        for event in self.eventlist:
+            durations_by_time[event.get_start_hour()].append(event.get_duration()) 
+        return durations_by_time
+    
     
     def __repr__(self):
         return '\n'.join([e.get_string() for e in self.eventlist])

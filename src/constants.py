@@ -9,9 +9,12 @@ causes = {"panne de signalisation":"PANNE SIG",
           "panne de matériel":"PANNE MAT",
           "panne électrique":"PANNE ELEC",
           "incident d'exploitation":"INCIDENT_EXPL",
+          "incident technique":"INCIDENT_TECH",
+          "incident voyageur":"VOYAGEUR_INCIDENT",
           "accident grave de voyageur":"VOYAGEUR_ACCIDENT",
           "voyageur sur la voie":"VOYAGEUR_VOIE",
           "malaise voyageur":"VOYAGEUR_MALAISE",
-          "colis suspect": "COLIS"}
+          "colis suspect": "COLIS",
+          "mesure de s": "SECURITE"}
           
 ESTIMATION = 'estimation'
