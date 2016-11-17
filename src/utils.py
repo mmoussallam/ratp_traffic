@@ -13,16 +13,25 @@ import json
 from event import Event, EventCollection, _parse_date
 from constants import ESTIMATION
 
+#r = api.request('search/tweets', params={'count':100, 'from':'RER_A'})
 
-
-def make_request(count=200, max_id=None, target_user='@RER_A'):
+def get_user_id(target_user='@RER_A'):
+    resp = api.request('users/show', params={'screen_name': target_user})
+    obj = resp.json()
+    return obj.get('id_str','')
+    
+def make_request(user_id, count=200, max_id=None,target_user=None):
     dico_param = {'count':count,
                   'exclude_replies':True,
-                  'user_id':target_user,
-                  'screen_name':target_user[1:]}
+                  'user_id':user_id}
+                  
+    if target_user and not user_id:
+        dico_param['screen_name'] = target_user[1:]
+        #dico_param['from'] = target_user[1:]
     if max_id:
         dico_param['max_id'] = max_id
     return api.request('statuses/user_timeline', params=dico_param)
+    #return api.request('search/tweets', params=dico_param)
 
 
 def parse_tweet(tweet):
@@ -55,12 +64,16 @@ def parse_tweet(tweet):
 
 def get_tweets_for_user(target_user, n_rounds=100):
     """ get it all """
-    r = make_request(target_user=target_user)
+    user_id = get_user_id(target_user)
+    r = make_request(int(user_id))
+    #r = make_request(None, target_user=target_user)
     events = EventCollection([])
     event_stops = set([])
     current_event = None
+    total=0
     for _ in range(n_rounds):
         for item in r:
+            total+=1
             #print item['created_at']
             # if tweet is not on same day as current, close current and start again
             if current_event and _parse_date(item).day != _parse_date(current_event.end_tweet).day:
@@ -79,8 +92,11 @@ def get_tweets_for_user(target_user, n_rounds=100):
             if nature == ESTIMATION and current_event:
                 current_event.set_estimation(item)
                 #print current_event
-            
-        r = make_request(max_id=max_id, target_user=target_user)
+        print "new request", max_id, ' ', total," last tweet: ", item['text'], item['created_at']
+        r = make_request(user_id, max_id=max_id)
+        #r = make_request(None, max_id=max_id, target_user=target_user)
+        
+    print "%d tweets parsed" % total
     return events        
     
 

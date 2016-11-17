@@ -9,7 +9,6 @@ from utils import get_tweets_for_user
 import os.path as op
 from pandas import DataFrame
 import matplotlib.pyplot as plt
-import numpy as np
 
 
 here = op.abspath(op.dirname(utils.__file__))
@@ -17,17 +16,16 @@ outputfile = op.join(here,'..','data',
                      'saved_tweets.json')
 
 
-events = get_tweets_for_user(target_user='@RER_A', n_rounds=100)
+events = get_tweets_for_user(target_user='@RER_A', n_rounds=20)
 events.save(outputfile)
 
 #loaded_events = load_from_json(outputfile)
 
 # explore durations by causes
 durations_by_causes = events.get_durations_by_cause()
+df_causes = DataFrame( [{"cause":k, "duration":t.seconds / 3600.} for k,v in durations_by_causes.iteritems() for t in v])
 
-df_causes =DataFrame( [{"cause":k, "duration":t.seconds / 3600.} for k,v in durations_by_causes.iteritems() for t in v])
-
-
+# explore durations by time
 durations_by_times = events.get_durations_by_time()
 df_times = DataFrame([{"time":k, "duration":t.seconds / 3600.} for k,v in durations_by_times.iteritems() for t in v])
 
