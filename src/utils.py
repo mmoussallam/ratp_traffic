@@ -9,9 +9,10 @@ from credentials import oauth_consumer_key, oauth_consumer_secret, oauth_token, 
 
 from TwitterAPI import TwitterAPI
 api = TwitterAPI(oauth_consumer_key, oauth_consumer_secret, oauth_token, oauth_secret)
-import json
 from event import Event, EventCollection, _parse_date
 from constants import ESTIMATION
+from pandas import DataFrame
+import matplotlib.pyplot as plt
 
 #r = api.request('search/tweets', params={'count':100, 'from':'RER_A'})
 
@@ -62,7 +63,7 @@ def parse_tweet(tweet):
     return tweet['created_at'], nature, typ
 
 
-def get_tweets_for_user(target_user, n_rounds=100):
+def get_tweets_for_user(target_user, n_rounds=16):
     """ get it all """
     user_id = get_user_id(target_user)
     r = make_request(int(user_id))
@@ -100,3 +101,23 @@ def get_tweets_for_user(target_user, n_rounds=100):
     return events        
     
 
+def print_stats(events, figure_path=None):
+    """ compute stats """    
+    # explore durations by causes
+    durations_by_causes = events.get_durations_by_cause()
+    df_causes = DataFrame( [{"cause":k, "duration":t.seconds / 3600.} for k,v in durations_by_causes.iteritems() for t in v])
+    
+    # explore durations by time
+    durations_by_times = events.get_durations_by_time()
+    df_times = DataFrame([{"time":k, "duration":t.seconds / 3600.} for k,v in durations_by_times.iteritems() for t in v])
+    
+    
+    fig = plt.figure(figsize=(8,12))
+    ax = plt.subplot(211)
+    df_causes.boxplot(column='duration', by='cause', rot=75, ax=ax)
+    ax = plt.subplot(212)
+    df_times.boxplot(column='duration', by='time', ax=ax)
+    fig.tight_layout()
+    if figure_path:
+        fig.savefig(figure_path)
+    return figure_path
