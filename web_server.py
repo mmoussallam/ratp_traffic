@@ -19,7 +19,7 @@ def hello():
 def print_stat(twitter_name):
     """ compute the figures if needed, then serves it """
     token = datetime.datetime.now().strftime("%Y%m%d")
-    events = get_tweets_for_user(target_user='@'+twitter_name, n_rounds=4)
+    events = get_tweets_for_user(target_user='@'+twitter_name, n_rounds=16)
     figure_path = op.join(project_path, 'figures', '%s_%s.png' % (twitter_name, token))
     print "Entering stat method"
     returned_path = print_stats(events, figure_path=figure_path)

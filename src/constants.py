@@ -15,6 +15,7 @@ causes = {"panne de signalisation":"PANNE SIG",
           "voyageur sur la voie":"VOYAGEUR_VOIE",
           "malaise voyageur":"VOYAGEUR_MALAISE",
           "colis suspect": "COLIS",
+          "mouvement social": "MVNT SOCIAL",
           "mesure de s": "SECURITE"}
           
 ESTIMATION = 'estimation'

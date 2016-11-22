@@ -16,7 +16,7 @@ outputfile = op.join(here,'..','data',
                      'saved_tweets.json')
 
 
-events = get_tweets_for_user(target_user='@RER_B', n_rounds=16)
+events = get_tweets_for_user(target_user='@RERB', n_rounds=16)
 events.save(outputfile)
 
 path = print_stats(events)
